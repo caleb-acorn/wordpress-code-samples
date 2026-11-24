@@ -1,0 +1,111 @@
+/* =============================================================
+    Scroll-Reveal Animations — Base Styles
+    =============================================================
+    Hidden/revealed states + keyframes for the anim-* classes the toolbar
+    control writes. The hidden state exists ONLY under html.js-anim, so no
+    JS means everything renders fully visible.
+
+    The @media screen gate keeps below-fold elements from printing invisible.
+
+    Motion tokens are parent-owned (--acorn-anim-* on :root below); a child
+    retunes them by redefining the vars. --acorn-anim-duration MUST match the
+    control's default speed preset.
+   ============================================================= */
+
+:root {
+    --acorn-anim-duration: 3s;   /* default speed; keep in sync with the control's "Default" preset */
+    --acorn-anim-easing: cubic-bezier(0.22, 1, 0.36, 1);
+    --acorn-anim-distance: 2rem; /* slide travel for the directional fades */
+    --acorn-anim-stagger-step: .5s; /* delay between staggered children; the control normally writes an explicit --anim-stagger-step */
+}
+
+@media screen and (prefers-reduced-motion: no-preference) {
+
+    /* Hidden until revealed — opacity only, so an element waiting below the
+       fold cannot cause horizontal overflow; the slide offset lives in the
+       keyframes, which animate without touching layout, so CLS stays 0. */
+    html.js-anim .anim-fade:not(.is-revealed),
+    html.js-anim .anim-fade-up:not(.is-revealed),
+    html.js-anim .anim-fade-down:not(.is-revealed),
+    html.js-anim .anim-fade-left:not(.is-revealed),
+    html.js-anim .anim-fade-right:not(.is-revealed) {
+        opacity: 0;
+    }
+
+    /* Revealed: play the matching keyframes once. */
+    html.js-anim .anim-fade.is-revealed,
+    html.js-anim .anim-fade-up.is-revealed,
+    html.js-anim .anim-fade-down.is-revealed,
+    html.js-anim .anim-fade-left.is-revealed,
+    html.js-anim .anim-fade-right.is-revealed {
+        animation-duration: var(--anim-duration, var(--acorn-anim-duration));
+        animation-delay: var(--anim-delay, 0s);
+        animation-timing-function: var(--acorn-anim-easing);
+        /* both: hold the `from` (hidden) state during any delay, then
+           the natural state after — so an offset stays invisible, not
+           flashed, until it plays. */
+        animation-fill-mode: both;
+    }
+
+    html.js-anim .anim-fade.is-revealed       { animation-name: acorn-anim-fade; }
+    html.js-anim .anim-fade-up.is-revealed    { animation-name: acorn-anim-fade-up; }
+    html.js-anim .anim-fade-down.is-revealed  { animation-name: acorn-anim-fade-down; }
+    html.js-anim .anim-fade-left.is-revealed  { animation-name: acorn-anim-fade-left; }
+    html.js-anim .anim-fade-right.is-revealed { animation-name: acorn-anim-fade-right; }
+
+    /* `to` is implicit — each animation ends at the element's natural
+       state, so fill-mode simply hands off to normal rendering. */
+    @keyframes acorn-anim-fade {
+        from { opacity: 0; }
+    }
+    @keyframes acorn-anim-fade-up {
+        from { opacity: 0; transform: translateY(var(--acorn-anim-distance)); }
+    }
+    @keyframes acorn-anim-fade-down {
+        from { opacity: 0; transform: translateY(calc(-1 * var(--acorn-anim-distance))); }
+    }
+    @keyframes acorn-anim-fade-left {
+        from { opacity: 0; transform: translateX(var(--acorn-anim-distance)); }
+    }
+    @keyframes acorn-anim-fade-right {
+        from { opacity: 0; transform: translateX(calc(-1 * var(--acorn-anim-distance))); }
+    }
+
+    /* ── Stagger children ──────────────────────────────────────────────
+       Only the PARENT carries a class and gets `.is-revealed`; the children are
+       hidden and animated by these descendant rules alone, so their hidden state
+       is in the markup before first paint. */
+    html.js-anim .anim-stagger:not(.is-revealed) > * {
+        opacity: 0;
+    }
+
+    html.js-anim .anim-stagger.is-revealed > * {
+        animation-duration: var(--anim-duration, var(--acorn-anim-duration));
+        animation-timing-function: var(--acorn-anim-easing);
+        animation-fill-mode: both;
+    }
+
+    /* Direction is set once on the parent; every child inherits it. */
+    html.js-anim .anim-stagger-fade.is-revealed > *       { animation-name: acorn-anim-fade; }
+    html.js-anim .anim-stagger-fade-up.is-revealed > *    { animation-name: acorn-anim-fade-up; }
+    html.js-anim .anim-stagger-fade-down.is-revealed > *  { animation-name: acorn-anim-fade-down; }
+    html.js-anim .anim-stagger-fade-left.is-revealed > *  { animation-name: acorn-anim-fade-left; }
+    html.js-anim .anim-stagger-fade-right.is-revealed > * { animation-name: acorn-anim-fade-right; }
+
+    /* Per-child delay = index × step. Enumerated because CSS can't
+       multiply by a live child index; the 12th delay clamps everything
+       beyond it (rare — a stagger of >12 direct children). */
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(1)    { animation-delay: calc(0  * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(2)    { animation-delay: calc(1  * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(3)    { animation-delay: calc(2  * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(4)    { animation-delay: calc(3  * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(5)    { animation-delay: calc(4  * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(6)    { animation-delay: calc(5  * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(7)    { animation-delay: calc(6  * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(8)    { animation-delay: calc(7  * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(9)    { animation-delay: calc(8  * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(10)   { animation-delay: calc(9  * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(11)   { animation-delay: calc(10 * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(12)   { animation-delay: calc(11 * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+    html.js-anim .anim-stagger.is-revealed > *:nth-child(n+13) { animation-delay: calc(12 * var(--anim-stagger-step, var(--acorn-anim-stagger-step))); }
+}
